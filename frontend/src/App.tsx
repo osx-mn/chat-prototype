@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Send } from "./assets/icons/icons";
+import axios from 'axios';
 import BubbleMessage from "./components/BubbleMessaje";
+import { message } from "./interfaces";
 
 const App: React.FC = () => {
 
-  const [text, setText]= useState<string[]>(["aaa"]);
+  const [text, setText]= useState<string[]>([]);
   const [target, setTarget]= useState<string>("");
 
   const newText= () => {
@@ -17,6 +19,21 @@ const App: React.FC = () => {
   const changeEvent= (event: React.ChangeEvent<HTMLInputElement>) =>{
     setTarget(event.target.value);
   }
+
+  useEffect(() =>{
+    const fetchData = async () =>{
+      try{
+        const response= await axios.get<message[]>('http://localhost:3000/messages')
+        response.data.map((item) => (
+          setText((prevItems) => [...prevItems, item.content])
+        ));
+      } catch (err){
+        console.error('Error al obtener los mensajes: ', err);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <>
