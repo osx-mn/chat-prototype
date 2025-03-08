@@ -9,31 +9,37 @@ const App: React.FC = () => {
   const [text, setText]= useState<string[]>([]);
   const [target, setTarget]= useState<string>("");
 
-  const newText= () => {
+  const newText= async () => {
     if (target.trim() != ""){
-      setText((prevItems) => [...prevItems, target]);
-      setTarget("");
+      const message={ sender: 'oscar', content: target }
+      try{
+        await axios.post('http://localhost:3000/messages', message);
+        setTarget("");
+        fetchData();
+      } catch (err){
+        console.error("Error al enviar el mensaje: ", err)
+      }
     }
   }
+
+  const fetchData = async () =>{
+    try{
+      const response= await axios.get<message[]>('http://localhost:3000/messages');
+      setText(
+        response.data.map((item) => item.content)
+      )
+    } catch (err){
+      console.error('Error al obtener los mensajes: ', err);
+    }
+  };
+
+  useEffect(() =>{
+    fetchData();
+  }, []);
 
   const changeEvent= (event: React.ChangeEvent<HTMLInputElement>) =>{
     setTarget(event.target.value);
   }
-
-  useEffect(() =>{
-    const fetchData = async () =>{
-      try{
-        const response= await axios.get<message[]>('http://localhost:3000/messages')
-        response.data.map((item) => (
-          setText((prevItems) => [...prevItems, item.content])
-        ));
-      } catch (err){
-        console.error('Error al obtener los mensajes: ', err);
-      }
-    };
-
-    fetchData();
-  }, []);
 
   return (
     <>
@@ -41,7 +47,7 @@ const App: React.FC = () => {
       <div className="w-[80%] h-[90%] border rounded-[10px] flex flex-col items-center">
 
         {/* burbujas de texto */}
-        <div className="w-[100%] flex-grow overflow-auto scroll-hidden">
+        <div className="w-[100%] flex-grow overflow-auto scroll-hidden flex flex-col-reverse">
           {text.map((texto, index) => (
             <BubbleMessage key={index} message={texto}/>
           ))}
